@@ -93,6 +93,7 @@ def convert_CAxis_to_Sine(Dir, to_tens):
         if (to_tens):
             sine_transform = get_transform()
             sine_arr = sine_transform(sine_arr)
+            CAxis_arr2 = sine_transform(CAxis_arr2)
         full_list.append(sine_arr)
         full_CAxis.append(CAxis_arr2)
     return full_list, full_CAxis
