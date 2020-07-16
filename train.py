@@ -20,21 +20,21 @@ from CAxis_to_Sine import convert_CAxis_to_Sine
 import torch.nn.functional as func
 
 
-# """Set parameters for network"""
-# # Root directory for dataset
-# dataroot = "./datasets/"
-# # Number of channels in the training images. For color images this is 3
-# nc = 1
-# # Number of training epochs
-# num_epochs = 5
-# # Learning rate for optimizers
-# lr = 0.0002
-# # Beta1 hyperparam for Adam optimizers
-# beta1 = 0.5
-# # Number of GPUs available. Use 0 for CPU mode.
-# ngpu = 0
-# #dataset size
-# dataset_size = 500
+"""Set parameters for network"""
+# Root directory for dataset
+dataroot = "./datasets/"
+# Number of channels in the training images. For color images this is 3
+nc = 1
+# Number of training epochs
+num_epochs = 150
+# Learning rate for optimizers
+lr = 0.0002
+# Beta1 hyperparam for Adam optimizers
+beta1 = 0.5
+# Number of GPUs available. Use 0 for CPU mode.
+ngpu = 1
+#dataset size
+dataset_size = 500
 
 
 class Generator(nn.Module):
