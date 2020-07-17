@@ -42,14 +42,14 @@ class Generator(nn.Module):
     def __init__(self, ngpu):
         super(Generator, self).__init__()
         self.ngpu = ngpu
-        self.conv1 = nn.Conv1d(1, 2, kernel_size=3, stride=1)
-        self.bn1 = nn.BatchNorm1d(2)
-        self.conv2 = nn.Conv1d(2, 4, kernel_size=3, stride=1)
-        self.bn2 = nn.BatchNorm1d(4)
-        self.conv3 = nn.Conv1d(4, 16, kernel_size=4, stride=2)
-        self.bn3 = nn.BatchNorm1d(16)
-        self.lin1 = nn.Linear(512, 128)
-        self.bn4 = nn.BatchNorm(128)
+        self.conv1 = nn.Conv1d(1, 4, kernel_size=3, stride=1)
+        self.bn1 = nn.BatchNorm1d(4)
+        self.conv2 = nn.Conv1d(4, 16, kernel_size=3, stride=1)
+        self.bn2 = nn.BatchNorm1d(16)
+        self.conv3 = nn.Conv1d(16, 32, kernel_size=4, stride=2)
+        self.bn3 = nn.BatchNorm1d(32)
+        self.lin1 = nn.Linear(480, 128)
+        # self.bn4 = nn.BatchNorm1d(128)
         self.lin2 = nn.Linear(128, 3)
 
 
@@ -57,8 +57,8 @@ class Generator(nn.Module):
         x = func.relu(self.bn1(self.conv1(input)))
         x = func.relu(self.bn2(self.conv2(x)))
         x = func.relu(self.bn3(self.conv3(x)))
-        x = x.view(-1, 512)
-        x = func.dropout(func.relu(self.bn4(self.lin1(x))))
+        x = x.view(-1, 480)
+        x = func.relu(self.lin1(x))
         x = self.lin2(x)
         x = x.view(3)
         return x
