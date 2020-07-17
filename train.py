@@ -18,6 +18,7 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 from CAxis_to_Sine import convert_CAxis_to_Sine
 import torch.nn.functional as func
+import math
 
 
 """Set parameters for network"""
@@ -26,13 +27,13 @@ dataroot = "./datasets/"
 # Number of channels in the training images. For color images this is 3
 nc = 1
 # Number of training epochs
-num_epochs = 150
+num_epochs = 300
 # Learning rate for optimizers
 lr = 0.0002
 # Beta1 hyperparam for Adam optimizers
 beta1 = 0.5
 # Number of GPUs available. Use 0 for CPU mode.
-ngpu = 1
+ngpu = 0
 #dataset size
 dataset_size = 500
 
@@ -45,13 +46,20 @@ class Generator(nn.Module):
         self.bn1 = nn.BatchNorm1d(2)
         self.conv2 = nn.Conv1d(2, 4, kernel_size=3, stride=1)
         self.bn2 = nn.BatchNorm1d(4)
-        self.lin1 = nn.Linear(128, 3)
+        self.conv3 = nn.Conv1d(4, 16, kernel_size=4, stride=2)
+        self.bn3 = nn.BatchNorm1d(16)
+        self.lin1 = nn.Linear(512, 128)
+        self.bn4 = nn.BatchNorm(128)
+        self.lin2 = nn.Linear(128, 3)
+
 
     def forward(self, input):
         x = func.relu(self.bn1(self.conv1(input)))
         x = func.relu(self.bn2(self.conv2(x)))
-        x = x.view(-1, 128)
-        x = self.lin1(x)
+        x = func.relu(self.bn3(self.conv3(x)))
+        x = x.view(-1, 512)
+        x = func.dropout(func.relu(self.bn4(self.lin1(x))))
+        x = self.lin2(x)
         x = x.view(3)
         return x
 
@@ -88,7 +96,7 @@ if __name__ == '__main__':
     netG = Generator(ngpu)
 
     # Initialize L1Loss function
-    criterion = nn.L1Loss()
+    criterion = nn.MSELoss()
 
 
     # Setup Adam optimizers for both G and D
@@ -115,6 +123,8 @@ if __name__ == '__main__':
 
                 netG.zero_grad()
                 fake = netG(current_sine)
+                magnitude = math.sqrt(fake[0].item()*fake[0].item()+fake[1].item()*fake[1].item()+fake[2].item()*fake[2].item())
+                fake = torch.div(fake, magnitude)
 
                 dot_product = fake[0]*current_CAxis[0] + fake[1]*current_CAxis[1] + fake[2]*current_CAxis[2]
 
@@ -128,6 +138,3 @@ if __name__ == '__main__':
         epochs.append(epoch)
     display_losses(epochs, G_losses, "")
     display_losses(epochs, dot_products, "_dot_products")
-
-
-
