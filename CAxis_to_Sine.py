@@ -1,6 +1,8 @@
 import numpy as np
 import math
 import torchvision.transforms as transforms
+import torch
+import random
 
 nPoints = 36
 
@@ -89,15 +91,15 @@ def convert_CAxis_to_Sine(Dir, to_tens):
             sine_arr[int(j/3),:] = generate_sine_arrs(amp, v_shift)
             CAxis_arr2[int(j/3),:] = [CAxis_arr[j], CAxis_arr[j+1], CAxis_arr[j+2]]
             j+=3
-
+            
         if (to_tens):
-            sine_transform = get_transform()
-            sine_arr = sine_transform(sine_arr)
-            CAxis_arr2 = sine_transform(CAxis_arr2)
-        full_list.append(sine_arr)
+            tensor_transform = get_transform()
+            sine_arr = tensor_transform(sine_arr)
+            CAxis_arr2 = tensor_transform(CAxis_arr2)
+        full_list.append([sine_arr, i])
         full_CAxis.append(CAxis_arr2)
     return full_list, full_CAxis
         
 
 if __name__=='__main__':
-    full_sine, full_CAxis = convert_CAxis_to_Sine("./datasets/", False)
+    full_sine, full_CAxis = convert_CAxis_to_Sine("./datasets/", True)
