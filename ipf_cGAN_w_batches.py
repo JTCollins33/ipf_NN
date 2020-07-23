@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
         D_losses.append(D_loss_sum/(1.0*dataset_size))
         G_losses.append(G_loss_sum/(1.0*dataset_size))
-        dot_products.append(dot_product_sum/(1.0*dot_product))
+        dot_products.append(dot_product_sum/(1.0*dataset_size))
         epochs.append(epoch)
     display_losses(epochs, D_losses, "_D_losses")
     display_losses(epochs, G_losses, "_G_losses")
