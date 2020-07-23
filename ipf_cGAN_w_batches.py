@@ -87,7 +87,7 @@ class Discriminator(nn.Module):
 def display_losses(epochs, losses, loss_type):
     plt.clf()
     plt.plot(epochs, losses)
-    plt.title("NN Loss After "+str(num_epochs)+" epochs")
+    plt.title("NN Loss After "+str(num_epochs)+" epochs"+loss_type)
     plt.xlabel("Epoch Number")
     plt.ylabel("Loss Value")
     plt.savefig("./results/"+str(num_epochs)+"_epochs_loss_plot"+loss_type+".png")
@@ -131,6 +131,9 @@ if __name__ == '__main__':
     print("Starting Training Loop...")
     """Loop for training"""
     for epoch in range(1, num_epochs+1):
+        G_loss_sum = 0.0
+        D_loss_sum = 0.0
+        dot_product_sum = 0.0
         for i in range(0, dataset_size):
             sine_file_stats = sine_list[i][0]
             CAxis_number = sine_list[i][1]
@@ -194,17 +197,18 @@ if __name__ == '__main__':
                 dot_sum += current_CAxis[j,0,0]*fake[j,0,0]+current_CAxis[j,0,1]*fake[j,0,1]+current_CAxis[j,0,2]*fake[j,0,2]
             dot_product = (1.0*dot_sum)/(1.0*fake.shape[0])
 
+            G_loss_sum += errG.item()
+            D_loss_sum += errD.item()
+            dot_product_sum += dot_product
+
         print('Epoch [%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
             % (epoch, num_epochs,
                 errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
-        D_losses.append(errD.item())
-        G_losses.append(errG.item())
-        dot_products.append(dot_product)
+        D_losses.append(D_loss_sum/(1.0*dataset_size))
+        G_losses.append(G_loss_sum/(1.0*dataset_size))
+        dot_products.append(dot_product_sum/(1.0*dot_product))
         epochs.append(epoch)
     display_losses(epochs, D_losses, "_D_losses")
     display_losses(epochs, G_losses, "_G_losses")
     display_losses(epochs, dot_products, "_dot_products")
-
-
-
