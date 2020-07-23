@@ -90,7 +90,7 @@ def display_losses(epochs, losses, loss_type):
     plt.title("NN Loss After "+str(num_epochs)+" epochs")
     plt.xlabel("Epoch Number")
     plt.ylabel("Loss Value")
-    plt.savefig("./results/"+str(num_epochs)+"_epochs_loss_plot"+loss_type+".tif")
+    plt.savefig("./results/"+str(num_epochs)+"_epochs_loss_plot"+loss_type+".png")
 
 
 if __name__ == '__main__':
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
     print("Starting Training Loop...")
     """Loop for training"""
-    for epoch in range(1, num_epochs):
+    for epoch in range(1, num_epochs+1):
         for i in range(0, dataset_size):
             sine_file_stats = sine_list[i][0]
             CAxis_number = sine_list[i][1]
