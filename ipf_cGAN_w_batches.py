@@ -188,17 +188,23 @@ if __name__ == '__main__':
             D_G_z2 = output_D.mean().item()
             optimizerG.step()
 
+            #calculate dot product
+            dot_sum = 0
+            for j in range(0, fake.shape[0]):
+                dot_sum += current_CAxis[j,0,0]*fake[j,0,0]+current_CAxis[j,0,1]*fake[j,0,1]+current_CAxis[j,0,2]*fake[j,0,2]
+            dot_product = (1.0*dot_sum)/(1.0*fake.shape[0])
+
         print('Epoch [%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
             % (epoch, num_epochs,
                 errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
         D_losses.append(errD.item())
         G_losses.append(errG.item())
-        # dot_products.append(dot_product)
+        dot_products.append(dot_product)
         epochs.append(epoch)
     display_losses(epochs, D_losses, "_D_losses")
     display_losses(epochs, G_losses, "_G_losses")
-    # display_losses(epochs, dot_products, "_dot_products")
+    display_losses(epochs, dot_products, "_dot_products")
 
 
 
