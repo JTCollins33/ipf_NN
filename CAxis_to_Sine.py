@@ -47,6 +47,32 @@ def read_one_file(k, Dir):
     file.close()
     return track_arr
 
+def read_one_file_test(k, Dir):
+    CAxis_file = Dir + "CAxisLocation_Image_"+str(k)+".txt"
+    track_arr = np.array([])
+    file = open(CAxis_file)
+
+    i = 0
+    for line in enumerate(file):
+        line = line[1]
+        if (line[0] != 'C'):
+            current_arr = np.array([0.0, 0.0, 0.0])
+            cnt = 0
+            st = ""
+            for i in range(0, len(line)):
+                if (line[i] != ','):
+                    st += str(line[i])
+
+                elif (line[i] == ','):
+                    current_arr[cnt] = float(st)
+                    cnt+=1
+                    st = ""
+
+            current_arr[2] = st
+            track_arr = np.append(track_arr, current_arr)    
+    file.close()
+    return track_arr
+
 def find_CAxis_Stats(f1, f2, f3):
     amp = int(100*(1-f3))
     v1 = [0,1]
@@ -99,7 +125,30 @@ def convert_CAxis_to_Sine(Dir, to_tens):
         full_list.append([sine_arr, i])
         full_CAxis.append(CAxis_arr2)
     return full_list, full_CAxis
+
+def convert_CAxis_to_Sine_test(Dir, to_tens):
+    full_list = []
+    full_CAxis = []
+
+    for i in range(501, 551):
+        CAxis_arr = read_one_file_test(i, Dir)
+        sine_arr = np.zeros((int(len(CAxis_arr)/3), nPoints), dtype = np.float32)
+        CAxis_arr2 = np.zeros((int(len(CAxis_arr)/3), 3), dtype = np.float32)
+        j = 0
+        while (j < len(CAxis_arr)):
+            amp, v_shift = find_CAxis_Stats(CAxis_arr[j], CAxis_arr[j+1], CAxis_arr[j+2])
+            sine_arr[int(j/3),:] = generate_sine_arrs(amp, v_shift)
+            CAxis_arr2[int(j/3),:] = [CAxis_arr[j], CAxis_arr[j+1], CAxis_arr[j+2]]
+            j+=3
+            
+        if (to_tens):
+            tensor_transform = get_transform()
+            sine_arr = tensor_transform(sine_arr)
+            CAxis_arr2 = tensor_transform(CAxis_arr2)
+        full_list.append([sine_arr, i])
+        full_CAxis.append(CAxis_arr2)
+    return full_list, full_CAxis
         
 
 if __name__=='__main__':
-    full_sine, full_CAxis = convert_CAxis_to_Sine("./datasets/", True)
+    full_sine, full_CAxis = convert_CAxis_to_Sine_test("./datasets/", True)
