@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from IPython.display import HTML
-from CAxis_to_Sine import convert_CAxis_to_Sine, get_transform
+from CAxis_to_Sine import convert_CAxis_to_Sine, convert_CAxis_to_Sine_test, get_transform
 import torch.nn.functional as func
 import math
 
@@ -95,6 +95,15 @@ def display_losses(epochs, losses, loss_type):
     plt.ylabel("Loss Value")
     plt.savefig("./results/"+str(num_epochs)+"_epochs_loss_plot"+loss_type+".png")
 
+def print_fake_results(fake, file_num):
+    file = open("./result_files/CAxis_fake_results_"+str(file_num)+".txt", "w")
+
+    file.write("CAxisLocation_0,CAxisLocation_1,CAxisLocation_2\n")
+    for i in range(0, fake.shape[0]):
+        file.write(str(fake[i,0,0].item())+","+str(fake[i,0,1].item())+","+str(fake[i,0,2].item())+"\n")
+
+    file.close()
+
 
 if __name__ == '__main__':
     """Create dataset """
@@ -133,7 +142,7 @@ if __name__ == '__main__':
 
     print("Starting Training Loop...")
     """Loop for training"""
-    for epoch in range(1, num_epochs+1):
+    for epoch in range(1, 2):
         G_loss_sum = 0.0
         D_loss_sum = 0.0
         dot_product_sum = 0.0
@@ -199,7 +208,8 @@ if __name__ == '__main__':
 
             errG = criterionD(output_D, label)
             #adjust generator error
-            errG = errG + criterionG(fake, current_CAxis) + dot_product*lambda_dot_product
+            # errG = errG + criterionG(fake, current_CAxis) + dot_product*lambda_dot_product
+            errG += criterionG(fake, current_CAxis)
             errG.backward()
             D_G_z2 = output_D.mean().item()
             optimizerG.step()
@@ -219,3 +229,23 @@ if __name__ == '__main__':
     display_losses(epochs, D_losses, "_D_losses")
     display_losses(epochs, G_losses, "_G_losses")
     display_losses(epochs, dot_products, "_dot_products")
+
+
+    """Start Testing"""
+    print("Starting Testing ...")
+    sine_test_list, CAxis_test_list = convert_CAxis_to_Sine_test(dataroot, True)
+    for i in range(0, len(sine_test_list)):
+        print("Printing output file "+str(i)+"/"+str(len(sine_test_list)))
+        current_sine = torch.reshape(sine_test_list[i][0], (sine_test_list[i][0].shape[1], 1, 36))
+        current_CAxis = torch.reshape(CAxis_test_list[i], (CAxis_test_list[i].shape[1], 1, 3))
+        file_number = sine_test_list[i][1]
+
+        fake = netG(current_sine)
+        for h in range(0, fake.shape[0]):
+            magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
+            one_CAxis = fake[h,:]
+            fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
+
+        fake = torch.reshape(fake, (fake.shape[0], 1, 3))
+
+        print_fake_results(fake, file_number)
