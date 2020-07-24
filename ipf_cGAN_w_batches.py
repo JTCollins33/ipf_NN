@@ -18,6 +18,7 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 from CAxis_to_Sine import convert_CAxis_to_Sine, get_transform
 import torch.nn.functional as func
+import math
 
 
 """Set parameters for network"""
@@ -35,6 +36,8 @@ beta1 = 0.5
 ngpu = 0
 #dataset size
 dataset_size = 500
+#adjust dot_product loss scaling factor
+lambda_dot_product = 100
 
 
 class Generator(nn.Module):
@@ -163,6 +166,10 @@ if __name__ == '__main__':
 
             #train with fake
             fake = netG(current_sine)
+            for h in range(0, fake.shape[0]):
+                magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
+                one_CAxis = fake[h,:]
+                fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
 
             fake = torch.reshape(fake, (fake.shape[0], 1, 3))
 
@@ -184,18 +191,18 @@ if __name__ == '__main__':
             output_D = netD(fake)
             label = torch.FloatTensor(batch_size,1).uniform_(0, 0.25).to(device)
 
-            errG = criterionD(output_D, label)
-            #adjust generator error
-            errG += criterionG(fake, current_CAxis)
-            errG.backward()
-            D_G_z2 = output_D.mean().item()
-            optimizerG.step()
-
             #calculate dot product
             dot_sum = 0
             for j in range(0, fake.shape[0]):
                 dot_sum += current_CAxis[j,0,0]*fake[j,0,0]+current_CAxis[j,0,1]*fake[j,0,1]+current_CAxis[j,0,2]*fake[j,0,2]
             dot_product = (1.0*dot_sum)/(1.0*fake.shape[0])
+
+            errG = criterionD(output_D, label)
+            #adjust generator error
+            errG = errG + criterionG(fake, current_CAxis) + dot_product*lambda_dot_product
+            errG.backward()
+            D_G_z2 = output_D.mean().item()
+            optimizerG.step()
 
             G_loss_sum += errG.item()
             D_loss_sum += errD.item()
