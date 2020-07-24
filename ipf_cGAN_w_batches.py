@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     print("Starting Training Loop...")
     """Loop for training"""
-    for epoch in range(1, 2):
+    for epoch in range(1, num_epochs+1):
         G_loss_sum = 0.0
         D_loss_sum = 0.0
         dot_product_sum = 0.0
