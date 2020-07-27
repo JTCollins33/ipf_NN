@@ -68,24 +68,22 @@ class Discriminator(nn.Module):
     def __init__(self, ngpu):
         super(Discriminator, self).__init__()
         self.ngpu = ngpu
-        # self.main = nn.Sequential(
-        #     nn.Conv1d(1,2, kernel_size=2, stride=1)
-        #     nn.BatchNorm1d(2)
-        #     nn.LeakyReLU(0.2, inplace=True),
-        #     nn.Sigmoid()
-        # )
         self.conv1 = nn.Conv1d(1,2, kernel_size=2, stride=1)
         self.bn1 = nn.BatchNorm1d(2)
         self.rl1 = nn.LeakyReLU(0.2, inplace=True)
-        self.lin1 = nn.Linear(4, 1)
-        self.sig1 = nn.Sigmoid()
+        self.conv2 = nn.Conv1d(2, 4, kernel_size=2, stride=1, padding=1)
+        self.bn2 = nn.BatchNorm1d(4)
+        self.rl2 = nn.LeakyReLU(0.2, inplace=True)
+        self.lin1 = nn.Linear(12, 4)
+        self.lin2 = nn.Linear(4, 1)
+        self.sig = nn.Sigmoid()
 
     def forward(self, input):
         x = self.rl1(self.bn1(self.conv1(input)))
-        x = x.view(-1,4)
-        x = self.sig1(self.lin1(x))
+        x = self.rl2(self.bn2(self.conv2(x)))
+        x = x.view(-1,12)
+        x = self.sig(self.lin2(self.lin1(x)))
         return x
-        # return torch.mean(self.main(input)).item()
 
 def display_losses(epochs, losses, loss_type):
     plt.clf()
