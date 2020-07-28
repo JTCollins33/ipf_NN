@@ -27,7 +27,7 @@ dataroot = "./datasets/"
 # Number of channels in the training images. For color images this is 3
 nc = 1
 # Number of training epochs
-num_epochs = 300
+num_epochs = 1000
 # Learning rate for optimizers
 lr = 0.0002
 # Beta1 hyperparam for Adam optimizers
@@ -68,21 +68,16 @@ class Discriminator(nn.Module):
     def __init__(self, ngpu):
         super(Discriminator, self).__init__()
         self.ngpu = ngpu
-        self.conv1 = nn.Conv1d(1,2, kernel_size=2, stride=1)
-        self.bn1 = nn.BatchNorm1d(2)
-        self.rl1 = nn.LeakyReLU(0.2, inplace=True)
-        self.conv2 = nn.Conv1d(2, 4, kernel_size=2, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm1d(4)
-        self.rl2 = nn.LeakyReLU(0.2, inplace=True)
-        self.lin1 = nn.Linear(12, 4)
-        self.lin2 = nn.Linear(4, 1)
+        self.conv = nn.Conv1d(1,2, kernel_size=2, stride=1)
+        self.bn = nn.BatchNorm1d(2)
+        self.rl = nn.LeakyReLU(0.2, inplace=True)
+        self.lin = nn.Linear(4, 1)
         self.sig = nn.Sigmoid()
 
     def forward(self, input):
-        x = self.rl1(self.bn1(self.conv1(input)))
-        x = self.rl2(self.bn2(self.conv2(x)))
-        x = x.view(-1,12)
-        x = self.sig(self.lin2(self.lin1(x)))
+        x = self.rl(self.bn(self.conv(input)))
+        x = x.view(-1,4)
+        x = self.sig(self.lin(x))
         return x
 
 def display_losses(epochs, losses, loss_type):
@@ -173,10 +168,10 @@ if __name__ == '__main__':
 
             #train with fake
             fake = netG(current_sine)
-            for h in range(0, fake.shape[0]):
-                magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
-                one_CAxis = fake[h,:]
-                fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
+            # for h in range(0, fake.shape[0]):
+            #     magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
+            #     one_CAxis = fake[h,:]
+            #     fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
 
             fake = torch.reshape(fake, (fake.shape[0], 1, 3))
 
