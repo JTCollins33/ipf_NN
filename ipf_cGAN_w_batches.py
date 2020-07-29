@@ -139,6 +139,7 @@ if __name__ == '__main__':
         G_loss_sum = 0.0
         D_loss_sum = 0.0
         dot_product_sum = 0.0
+        random.shuffle(sine_list)
         for i in range(0, dataset_size):
             sine_file_stats = sine_list[i][0]
             CAxis_number = sine_list[i][1]
