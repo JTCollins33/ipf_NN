@@ -37,7 +37,7 @@ ngpu = 0
 #dataset size
 dataset_size = 500
 #adjust dot_product loss scaling factor
-lambda_dot_product = 100
+lambda_dot_product = 0.25
 
 
 class Generator(nn.Module):
@@ -202,8 +202,8 @@ if __name__ == '__main__':
 
             errG = criterionD(output_D, label)
             #adjust generator error
-            # errG = errG + criterionG(fake, current_CAxis) + dot_product*lambda_dot_product
-            errG += criterionG(fake, current_CAxis)
+            errG = errG + criterionG(fake, current_CAxis) + (1.0-dot_product)*lambda_dot_product
+#             errG += criterionG(fake, current_CAxis)
             errG.backward()
             D_G_z2 = output_D.mean().item()
             optimizerG.step()
