@@ -27,7 +27,7 @@ dataroot = "./datasets/"
 # Number of channels in the training images. For color images this is 3
 nc = 1
 # Number of training epochs
-num_epochs = 1000
+num_epochs = 300
 # Learning rate for optimizers
 lr = 0.0002
 # Beta1 hyperparam for Adam optimizers
@@ -38,6 +38,8 @@ ngpu = 0
 dataset_size = 500
 #adjust dot_product loss scaling factor
 lambda_dot_product = 0.25
+#parameter choice for testing
+test = True
 
 
 class Generator(nn.Module):
@@ -96,6 +98,17 @@ def print_fake_results(fake, file_num):
         file.write(str(fake[i,0,0].item())+","+str(fake[i,0,1].item())+","+str(fake[i,0,2].item())+"\n")
 
     file.close()
+
+
+def check_anti_parallel(real, fake, i, dp):
+    anti = False
+    mag_real = math.sqrt(real[i,0,0].item()*real[i,0,0].item()+real[i,0,1].item()*real[i,0,1].item()+real[i,0,2].item()*real[i,0,2].item())
+    mag_fake = math.sqrt(fake[i,0,0].item()*fake[i,0,0].item()+fake[i,0,1].item()*fake[i,0,1].item()+fake[i,0,2].item()*fake[i,0,2].item())
+    cos = dp/(1.0*mag_real*mag_fake)
+    ang = math.acos(cos)
+    if (abs(ang)>(math.pi*0.5)):
+      anti = True
+    return anti
 
 
 if __name__ == '__main__':
@@ -197,13 +210,16 @@ if __name__ == '__main__':
             #calculate dot product
             dot_sum = 0
             for j in range(0, fake.shape[0]):
-                dot_sum += current_CAxis[j,0,0]*fake[j,0,0]+current_CAxis[j,0,1]*fake[j,0,1]+current_CAxis[j,0,2]*fake[j,0,2]
+                dp = current_CAxis[j,0,0]*fake[j,0,0]+current_CAxis[j,0,1]*fake[j,0,1]+current_CAxis[j,0,2]*fake[j,0,2]
+                if (check_anti_parallel(current_CAxis, fake, j, dp)):
+                    dp = (1.0-dp)
+                dot_sum += dp
             dot_product = (1.0*dot_sum)/(1.0*fake.shape[0])
 
             errG = criterionD(output_D, label)
             #adjust generator error
             errG = errG + criterionG(fake, current_CAxis) + (1.0-dot_product)*lambda_dot_product
-#             errG += criterionG(fake, current_CAxis)
+            # errG += criterionG(fake, current_CAxis)
             errG.backward()
             D_G_z2 = output_D.mean().item()
             optimizerG.step()
@@ -224,22 +240,22 @@ if __name__ == '__main__':
     display_losses(epochs, G_losses, "_G_losses")
     display_losses(epochs, dot_products, "_dot_products")
 
+    if (test):
+        """Start Testing"""
+        print("Starting Testing ...")
+        sine_test_list, CAxis_test_list = convert_CAxis_to_Sine_test(dataroot, True)
+        for i in range(0, len(sine_test_list)):
+            print("Printing output file "+str(i)+"/"+str(len(sine_test_list)))
+            current_sine = torch.reshape(sine_test_list[i][0], (sine_test_list[i][0].shape[1], 1, 36))
+            current_CAxis = torch.reshape(CAxis_test_list[i], (CAxis_test_list[i].shape[1], 1, 3))
+            file_number = sine_test_list[i][1]
 
-    """Start Testing"""
-    print("Starting Testing ...")
-    sine_test_list, CAxis_test_list = convert_CAxis_to_Sine_test(dataroot, True)
-    for i in range(0, len(sine_test_list)):
-        print("Printing output file "+str(i)+"/"+str(len(sine_test_list)))
-        current_sine = torch.reshape(sine_test_list[i][0], (sine_test_list[i][0].shape[1], 1, 36))
-        current_CAxis = torch.reshape(CAxis_test_list[i], (CAxis_test_list[i].shape[1], 1, 3))
-        file_number = sine_test_list[i][1]
+            fake = netG(current_sine)
+            for h in range(0, fake.shape[0]):
+                magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
+                one_CAxis = fake[h,:]
+                fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
 
-        fake = netG(current_sine)
-        for h in range(0, fake.shape[0]):
-            magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
-            one_CAxis = fake[h,:]
-            fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
+            fake = torch.reshape(fake, (fake.shape[0], 1, 3))
 
-        fake = torch.reshape(fake, (fake.shape[0], 1, 3))
-
-        print_fake_results(fake, file_number)
+            print_fake_results(fake, file_number)
