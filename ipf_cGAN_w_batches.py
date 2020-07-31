@@ -27,9 +27,9 @@ dataroot = "./datasets/"
 # Number of channels in the training images. For color images this is 3
 nc = 1
 # Number of training epochs
-num_epochs = 300
+num_epochs = 2000
 # Learning rate for optimizers
-lr = 0.0002
+lr = 0.0001
 # Beta1 hyperparam for Adam optimizers
 beta1 = 0.5
 # Number of GPUs available. Use 0 for CPU mode.
@@ -38,7 +38,7 @@ ngpu = 0
 dataset_size = 500
 #adjust dot_product loss scaling factor
 lambda_dot_product = 0.25
-#parameter choice for testing
+#set True if you want to have output files from testing samples
 test = True
 
 
@@ -182,10 +182,6 @@ if __name__ == '__main__':
 
             #train with fake
             fake = netG(current_sine)
-            # for h in range(0, fake.shape[0]):
-            #     magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
-            #     one_CAxis = fake[h,:]
-            #     fake[h,:] = torch.div(one_CAxis, math.sqrt(magnitude))
 
             fake = torch.reshape(fake, (fake.shape[0], 1, 3))
 
