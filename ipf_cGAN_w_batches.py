@@ -105,6 +105,10 @@ def check_anti_parallel(real, fake, i, dp):
     mag_real = math.sqrt(real[i,0,0].item()*real[i,0,0].item()+real[i,0,1].item()*real[i,0,1].item()+real[i,0,2].item()*real[i,0,2].item())
     mag_fake = math.sqrt(fake[i,0,0].item()*fake[i,0,0].item()+fake[i,0,1].item()*fake[i,0,1].item()+fake[i,0,2].item()*fake[i,0,2].item())
     cos = dp/(1.0*mag_real*mag_fake)
+    if (cos < -1.0):
+        cos = -1.0
+    elif (cos > 1.0):
+        cos = 1.0
     ang = math.acos(cos)
     if (abs(ang)>(math.pi*0.5)):
       anti = True
