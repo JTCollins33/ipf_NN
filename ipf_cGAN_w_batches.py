@@ -33,13 +33,13 @@ lr = 0.0001
 # Beta1 hyperparam for Adam optimizers
 beta1 = 0.5
 # Number of GPUs available. Use 0 for CPU mode.
-ngpu = 0
+ngpu = 1
 #dataset size
 dataset_size = 500
 #adjust dot_product loss scaling factor
 lambda_dot_product = 0.25
 #set True if you want to have output files from testing samples
-test = True
+test = False
 
 
 class Generator(nn.Module):
@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
 
     """Setupt model """
-    netG = Generator(ngpu)
-    netD = Discriminator(ngpu)
+    netG = Generator(ngpu).to(device)
+    netD = Discriminator(ngpu).to(device)
 
     # Initialize Loss function
     criterionD = nn.BCELoss()
@@ -162,7 +162,7 @@ if __name__ == '__main__':
             # reshape tensor for input into generator
             current_sine = torch.reshape(sine_file_stats, (sine_file_stats.shape[1], 1, 36))
 
-            current_CAxis = torch.reshape(CAxis_file_stats, (CAxis_file_stats.shape[1], 1, 3))
+            current_CAxis = torch.reshape(CAxis_file_stats, (CAxis_file_stats.shape[1], 1, 3)).to(device)
 
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -176,19 +176,19 @@ if __name__ == '__main__':
             output_D = netD(current_CAxis)
 
             errD_real = criterionD(output_D, label)
-            errD_real.backward(retain_graph=True)
+            errD_real.backward()
             D_x = output_D.mean().item()
 
 
             #train with fake
-            fake = netG(current_sine)
+            fake = netG(real_cpu)
 
             fake = torch.reshape(fake, (fake.shape[0], 1, 3))
 
             label = torch.FloatTensor(batch_size,1).uniform_(0.75, 1.0).to(device)
-            output_D = netD(fake)
+            output_D = netD(fake.detach())
             errD_fake = criterionD(output_D, label)
-            errD_fake.backward(retain_graph=True)
+            errD_fake.backward()
 
             D_G_z1 = output_D.mean().item()
             errD = errD_real + errD_fake
@@ -212,17 +212,15 @@ if __name__ == '__main__':
                 dot_sum += dp
             dot_product = (1.0*dot_sum)/(1.0*fake.shape[0])
 
-            errG = criterionD(output_D, label)
             #adjust generator error
-            errG = errG + criterionG(fake, current_CAxis) + (1.0-dot_product)*lambda_dot_product
-            # errG += criterionG(fake, current_CAxis)
+            errG = criterionD(output_D, label) + criterionG(fake, current_CAxis) + (1.0-dot_product)*lambda_dot_product
             errG.backward()
             D_G_z2 = output_D.mean().item()
             optimizerG.step()
 
             G_loss_sum += errG.item()
             D_loss_sum += errD.item()
-            dot_product_sum += dot_product
+            dot_product_sum += dot_product.item()
 
         print('Epoch [%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
             % (epoch, num_epochs,
