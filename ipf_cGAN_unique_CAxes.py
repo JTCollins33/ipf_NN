@@ -27,7 +27,7 @@ file_path = "./datasets/unique/c_axes.txt"
 # Number of channels in the training images. For color images this is 3
 nc = 0
 # Number of training epochs
-num_epochs = 300
+num_epochs = 2000
 # Learning rate for optimizers
 lr = 0.0001
 # Beta1 hyperparam for Adam optimizers
