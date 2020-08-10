@@ -260,7 +260,7 @@ if __name__ == '__main__':
             current_CAxis = torch.reshape(CAxis_test[i], (CAxis_test[i].shape[1], 1, 3))
             file_number = sine_test[i][1]
 
-            fake = netG(current_sine)
+            fake = netG(current_sine.to(device))
             for h in range(0, fake.shape[0]):
                 magnitude = fake[h,0]*fake[h,0] + fake[h,1]*fake[h,1] + fake[h,2]*fake[h,2]
                 one_CAxis = fake[h,:]
